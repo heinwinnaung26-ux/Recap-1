@@ -1,0 +1,24 @@
+import { useState } from 'react';
+import VideoEditor from '../components/Video/VideoEditor';
+import SubtitleUploader from '../components/Subtitles/SubtitleUploader';
+import SubtitleEditor from '../components/Subtitles/SubtitleEditor';
+import TranslationTools from '../components/Subtitles/TranslationTools';
+import VideoPreview from '../components/Output/VideoPreview';
+import QualitySettings from '../components/Output/QualitySettings';
+import OutputAnimation from '../components/Output/OutputAnimation';
+import SaveConfigDialog from '../components/Output/SaveConfigDialog';
+import PreviewRender from '../components/Dashboard/PreviewRender';
+import { useSubtitles } from '../hooks/useSubtitles';
+import { useVideo } from '../contexts/VideoContext';
+import { loadKeys } from '../types/user.types';
+import { transcribeWithAssemblyAI } from '../utils/helpers';
+import { cuesToSrt } from '../types/subtitle.types';
+import { downloadText } from '../utils/helpers';
+import LoadingAnimation from '../components/Common/LoadingAnimation';
+import { elevenLabsTts, MYANMAR_VOICES } from '../services/api/elevenlabs.api';
+export default function CreateVideo() { const { setCues, cues, exportSrt } = useSubtitles(); const { videoUrl, project } = useVideo(); const [busy, setBusy] = useState(''); const [msg, setMsg] = useState(''); const [ttsUrl, setTtsUrl] = useState('');
+  const stt = async () => { const keys = loadKeys(); if (!keys.assemblyai) { setMsg('AssemblyAI key မထည့်ရသေးပါ — Get Started မှာ ထည့်ပါ။'); return; } if (!videoUrl) { setMsg('အရင် video တင်ပေးပါ။'); return; } setBusy('stt'); try { const blob = await (await fetch(videoUrl)).blob(); const out = await transcribeWithAssemblyAI(keys.assemblyai, blob); setCues(out); setMsg(`STT ပြီးပါပြီ — ${out.length} cues`); } catch (e) { setMsg(String(e)); } finally { setBusy(''); } };
+  const speak = () => { const text = cues.map((c) => c.translated || c.text).join(' '); if (!text) { setMsg('ပြောစရာ စာသား မရှိသေးပါ။'); return; } const u = new SpeechSynthesisUtterance(text); u.lang = 'my-MM'; u.rate = 1; speechSynthesis.cancel(); speechSynthesis.speak(u); setMsg('Device TTS နဲ့ sync preview ဖွင့်နေပါတယ် (browser voice)။'); };
+  const ttsFile = async () => { const keys = loadKeys(); const text = cues.map((c) => c.translated || c.text).join(' '); if (!keys.elevenlabs || !text) { setMsg('ElevenLabs key နဲ့ စာသား လိုပါတယ်။'); return; } setBusy('tts'); const r = await elevenLabsTts(keys.elevenlabs, text, MYANMAR_VOICES[0].id); setBusy(''); if (r.ok && r.data) { setTtsUrl(URL.createObjectURL(r.data)); setMsg('ElevenLabs audio ရပါပြီ။'); } else setMsg(r.error || 'TTS failed.'); };
+  return <div className="space-y-4"><h2 className="text-2xl font-bold">Create Video</h2><VideoEditor /><div className="flex flex-wrap gap-2"><button disabled={busy === 'stt'} onClick={() => void stt()} className="rounded-lg bg-indigo-600 px-4 py-2 text-sm text-white disabled:opacity-50">1. STT (AssemblyAI)</button><button onClick={() => downloadText('recap.srt', exportSrt(false), 'text/plain')} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm">SRT Download</button><button onClick={() => downloadText('recap.my.srt', cuesToSrt(cues, true), 'text/plain')} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm">Myanmar SRT Download</button><button onClick={speak} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm">2. TTS Sync Preview (device voice)</button><button disabled={busy === 'tts'} onClick={() => void ttsFile()} className="rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm">ElevenLabs Audio</button><SaveConfigDialog /></div>{busy && <LoadingAnimation label="Working…" />}{msg && <p className="text-sm text-slate-700">{msg}</p>}{ttsUrl && <audio controls src={ttsUrl} className="w-full" />}{project.videoUrl && <p className="text-xs text-slate-500">Video: {project.videoName} · TTS preview က video speed နဲ့ အချိန်ကိုက်ကြည့်နိုင်ပါတယ်။</p>}<SubtitleUploader /><SubtitleEditor /><TranslationTools /><VideoPreview /><QualitySettings /><OutputAnimation done={cues.length > 0} /><PreviewRender /></div>;
+}
