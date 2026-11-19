@@ -1,0 +1,2 @@
+import { useVideo } from '../contexts/VideoContext';
+export function useVideoEditing() { const { project, settings, updateSettings, setVideo, videoUrl } = useVideo(); return { project, settings, updateSettings, setVideo, videoUrl, setRatio: (ratio: typeof settings.ratio) => updateSettings({ ratio }), toggleMute: () => updateSettings({ muted: !settings.muted }), setSpeed: (speed: number) => updateSettings({ speed }) }; }
