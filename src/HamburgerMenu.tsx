@@ -1,0 +1,1 @@
+export default function HamburgerMenu({ onClick }: { onClick: () => void }) { return <button onClick={onClick} aria-label="Menu" className="rounded-lg border border-slate-300 bg-white px-3 py-2 text-lg">☰</button>; }
