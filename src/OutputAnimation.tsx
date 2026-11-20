@@ -1,0 +1,1 @@
+export default function OutputAnimation({ done = false }: { done?: boolean }) { return <div className="rounded-xl bg-white p-4 text-center shadow-sm">{done ? <p className="text-green-700">✓ Export အသင့်ဖြစ်ပါပြီ</p> : <p className="text-slate-500">Export လုပ်နေသည်…</p>}</div>; }
