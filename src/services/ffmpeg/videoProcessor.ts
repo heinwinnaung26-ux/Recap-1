@@ -1,0 +1,4 @@
+import { buildFfmpegCommand, type RenderPlan } from './ffmpeg.service';
+import type { VideoSettings } from '../../types/video.types';
+export function planRender(inputName: string, settings: VideoSettings, srtName = 'recap.my.srt'): RenderPlan { const out = inputName.replace(/\.[^.]+$/, '') + '-recap.mp4'; return buildFfmpegCommand(inputName, out, settings, srtName, settings.bgmUrl ? 'bgm.mp3' : undefined); }
+export function probeVideo(file: File): Promise<{ durationSec: number; width: number; height: number; url: string }> { return new Promise((resolve, reject) => { const url = URL.createObjectURL(file); const v = document.createElement('video'); v.preload = 'metadata'; v.onloadedmetadata = () => resolve({ durationSec: v.duration || 0, width: v.videoWidth, height: v.videoHeight, url }); v.onerror = () => reject(new Error('Video metadata ဖတ်လို့မရပါ။')); v.src = url; }); }
