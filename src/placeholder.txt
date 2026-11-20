@@ -1,0 +1,1 @@
+Put Lottie / CSS animation JSON files here (e.g. loading.json). Referenced by LoadingAnimation / OutputAnimation.
