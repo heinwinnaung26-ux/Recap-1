@@ -1,0 +1,5 @@
+import { useEffect, useState } from 'react';
+export interface HistoryItem { id: string; title: string; at: string; }
+export function loadHistory(): HistoryItem[] { try { return JSON.parse(localStorage.getItem('vrecap.history') || '[]'); } catch { return []; } }
+export function saveHistoryItem(item: HistoryItem) { const h = loadHistory(); localStorage.setItem('vrecap.history', JSON.stringify([item, ...h].slice(0, 50))); }
+export default function EditingHistory({ onOpen }: { onOpen?: (id: string) => void }) { const [items, setItems] = useState<HistoryItem[]>([]); useEffect(() => setItems(loadHistory()), []); if (!items.length) return <div className="rounded-xl bg-white p-4 text-sm text-slate-500 shadow-sm">Editing history မရှိသေးပါ။</div>; return <div className="rounded-xl bg-white p-4 shadow-sm"><h3 className="font-semibold">Editing History</h3><ul className="mt-2 space-y-1 text-sm">{items.map((i) => <li key={i.id}><button className="text-indigo-600 underline" onClick={() => onOpen?.(i.id)}>{i.title}</button> <span className="text-slate-400">· {new Date(i.at).toLocaleString()}</span></li>)}</ul></div>; }
